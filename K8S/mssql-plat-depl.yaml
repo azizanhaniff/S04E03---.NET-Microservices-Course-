@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: mssql
-          image: mcr.microsoft.com/mssql/server:2017-latest
+          image: mcr.microsoft.com/mssql/server:2022-latest
           ports:
             - containerPort: 1433
           env:
@@ -22,11 +22,11 @@ spec:
             value: "Express"
           - name: ACCEPT_EULA
             value: "Y"
-          - name: SA_PASSWORD
+          - name: MSSQL_SA_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: mssql
-                key: SA_PASSWORD
+                key: MSSQL_SA_PASSWORD
           volumeMounts:
           - mountPath: /var/opt/mssql/data
             name: mssqldb
@@ -52,7 +52,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mssql-loadbalancer
+  name: mssql-loadbalancer-srv
 spec:
   type: LoadBalancer
   selector:

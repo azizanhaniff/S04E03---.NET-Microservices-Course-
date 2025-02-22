@@ -1,10 +1,6 @@
-using System;
-using System.Net.Http;
+﻿using PlatformService.Dtos;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using PlatformService.Dtos;
 
 namespace PlatformService.SyncDataServices.Http
 {
@@ -19,7 +15,6 @@ namespace PlatformService.SyncDataServices.Http
             _configuration = configuration;
         }
 
-
         public async Task SendPlatformToCommand(PlatformReadDto plat)
         {
             var httpContent = new StringContent(
@@ -29,7 +24,7 @@ namespace PlatformService.SyncDataServices.Http
 
             var response = await _httpClient.PostAsync($"{_configuration["CommandService"]}", httpContent);
 
-            if(response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
             {
                 Console.WriteLine("--> Sync POST to CommandService was OK!");
             }

@@ -1,4 +1,4 @@
-namespace CommandsService.EventProcessing
+﻿namespace CommandsService.EventProcessing
 {
     public interface IEventProcessor
     {

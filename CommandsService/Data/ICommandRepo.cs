@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using CommandsService.Models;
+﻿using CommandsService.Models;
 
 namespace CommandsService.Data
 {
@@ -10,7 +9,7 @@ namespace CommandsService.Data
         // Platforms
         IEnumerable<Platform> GetAllPlatforms();
         void CreatePlatform(Platform plat);
-        bool PlaformExits(int platformId);
+        bool PlatformExist(int platformId);
         bool ExternalPlatformExists(int externalPlatformId);
 
         // Commands

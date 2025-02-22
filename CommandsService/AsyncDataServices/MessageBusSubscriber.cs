@@ -1,12 +1,8 @@
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿
 using CommandsService.EventProcessing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Text;
 
 namespace CommandsService.AsyncDataServices
 {
@@ -14,44 +10,70 @@ namespace CommandsService.AsyncDataServices
     {
         private readonly IConfiguration _configuration;
         private readonly IEventProcessor _eventProcessor;
-        private IConnection _connection;
-        private IModel _channel;
-        private string _queueName;
 
-        public MessageBusSubscriber(
-            IConfiguration configuration, 
-            IEventProcessor eventProcessor)
+        public MessageBusSubscriber(IConfiguration configuration, IEventProcessor eventProcessor)
         {
             _configuration = configuration;
             _eventProcessor = eventProcessor;
-
-            InitializeRabbitMQ();
         }
 
-        private void InitializeRabbitMQ()
+        private IConnection? _connection;
+        private IChannel? _channel;
+        private string _queueName;
+
+        private async Task InitializeRabbitMQ()
         {
-            var factory = new ConnectionFactory() { HostName = _configuration["RabbitMQHost"], Port = int.Parse(_configuration["RabbitMQPort"])};
+            if (_connection != null)
+            {
+                return;
+            }
 
-            _connection = factory.CreateConnection();
-            _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
-            _queueName = _channel.QueueDeclare().QueueName;
-            _channel.QueueBind(queue: _queueName,
-                exchange: "trigger",
-                routingKey: "");
+            var factory = new ConnectionFactory()
+            {
+                HostName = _configuration["RabbitMQHost"],
+                Port = int.Parse(_configuration["RabbitMQPort"])
+            };
 
-            Console.WriteLine("--> Listenting on the Message Bus...");
+            try
+            {
+                _connection = await factory.CreateConnectionAsync();
+                _channel = await _connection.CreateChannelAsync();
 
-            _connection.ConnectionShutdown += RabbitMQ_ConnectionShitdown;
+                await _channel.ExchangeDeclareAsync("trigger", ExchangeType.Fanout);
+
+                var _queue = await _channel.QueueDeclareAsync();
+                _queueName = _queue.QueueName;
+
+                await _channel.QueueBindAsync(
+                    queue: _queueName,
+                    exchange: "trigger",
+                    routingKey: string.Empty
+                );
+
+                _connection.ConnectionShutdownAsync += RabbitMQ_ConnectionShutdownAsync;
+
+                Console.WriteLine("--> Listening on the Message Bus");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"--> Could not connect to the Message Bus: {ex.Message}");
+            }
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        private async Task RabbitMQ_ConnectionShutdownAsync(object sender, ShutdownEventArgs e)
         {
+            Console.WriteLine("--> RabbitMQ Connection Shutdown");
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            await InitializeRabbitMQ();
+
             stoppingToken.ThrowIfCancellationRequested();
 
-            var consumer = new EventingBasicConsumer(_channel);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
 
-            consumer.Received += (ModuleHandle, ea) =>
+            consumer.ReceivedAsync += async (ModuleHandle, ea) =>
             {
                 Console.WriteLine("--> Event Received!");
 
@@ -61,25 +83,29 @@ namespace CommandsService.AsyncDataServices
                 _eventProcessor.ProcessEvent(notificationMessage);
             };
 
-            _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
-
-            return Task.CompletedTask;
-        }
-
-        private void RabbitMQ_ConnectionShitdown(object sender, ShutdownEventArgs e)
-        {
-            Console.WriteLine("--> Connection Shutdown");
+            await _channel.BasicConsumeAsync(
+                queue: _queueName,
+                autoAck: true,
+                consumer: consumer
+            );
         }
 
         public override void Dispose()
         {
-            if(_channel.IsOpen)
+            if (_channel != null && _channel.IsOpen)
             {
-                _channel.Close();
-                _connection.Close();
+                _channel.CloseAsync();
             }
 
-            base.Dispose(); 
+            if (_connection != null && _connection.IsOpen)
+            {
+                _connection.CloseAsync();
+            }
+
+            _connection = null;
+            _channel = null;
+
+            GC.SuppressFinalize(this);
         }
     }
 }

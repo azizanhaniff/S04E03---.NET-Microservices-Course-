@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CommandsService.Models
 {
@@ -17,6 +17,6 @@ namespace CommandsService.Models
         [Required]
         public int PlatformId { get; set; }
 
-        public Platform Platform {get; set;}
+        public Platform Platform { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using PlatformService.Models;
+﻿using PlatformService.Models;
 
 namespace PlatformService.Data
 {
@@ -16,7 +13,7 @@ namespace PlatformService.Data
 
         public void CreatePlatform(Platform plat)
         {
-            if(plat == null)
+            if (plat == null)
             {
                 throw new ArgumentNullException(nameof(plat));
             }
@@ -31,7 +28,7 @@ namespace PlatformService.Data
 
         public Platform GetPlatformById(int id)
         {
-            return _context.Platforms.FirstOrDefault(p => p.Id == id);
+            return _context.Platforms.FirstOrDefault(e => e.Id == id);
         }
 
         public bool SaveChanges()

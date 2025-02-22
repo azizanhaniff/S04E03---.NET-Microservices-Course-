@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using CommandsService.Models;
+﻿using CommandsService.Models;
 using CommandsService.SyncDataServices.Grpc;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CommandsService.Data
 {
@@ -11,26 +7,26 @@ namespace CommandsService.Data
     {
         public static void PrepPopulation(IApplicationBuilder applicationBuilder)
         {
-            using (var serviceScope = applicationBuilder.ApplicationServices.CreateScope())
-            {
-                var grpcClient = serviceScope.ServiceProvider.GetService<IPlatformDataClient>();
+            using var serviceScope = applicationBuilder.ApplicationServices.CreateScope();
 
-                var platforms = grpcClient.ReturnAllPlatforms();
+            var grpcClient = serviceScope.ServiceProvider.GetService<IPlatformDataClient>();
 
-                SeedData(serviceScope.ServiceProvider.GetService<ICommandRepo>(), platforms);
-            }
+            var platforms = grpcClient.ReturnAllPlatforms();
+
+            SeedData(serviceScope.ServiceProvider.GetService<ICommandRepo>(), platforms);
         }
-        
+
         private static void SeedData(ICommandRepo repo, IEnumerable<Platform> platforms)
         {
             Console.WriteLine("Seeding new platforms...");
 
-            foreach (var plat in platforms)
+            foreach (Platform plat in platforms)
             {
-                if(!repo.ExternalPlatformExists(plat.ExternalID))
+                if (repo.ExternalPlatformExists(plat.ExternalID) == false)
                 {
                     repo.CreatePlatform(plat);
                 }
+
                 repo.SaveChanges();
             }
         }

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using CommandsService.Models;
+﻿using CommandsService.Models;
 
 namespace CommandsService.Data
 {
@@ -27,10 +24,11 @@ namespace CommandsService.Data
 
         public void CreatePlatform(Platform plat)
         {
-            if(plat == null)
+            if (plat == null)
             {
                 throw new ArgumentNullException(nameof(plat));
             }
+
             _context.Platforms.Add(plat);
         }
 
@@ -41,13 +39,14 @@ namespace CommandsService.Data
 
         public IEnumerable<Platform> GetAllPlatforms()
         {
-            return _context.Platforms.ToList();
+            return _context.Platforms;
         }
 
         public Command GetCommand(int platformId, int commandId)
         {
             return _context.Commands
-                .Where(c => c.PlatformId == platformId && c.Id == commandId).FirstOrDefault();
+                .Where(c => c.PlatformId == platformId && c.Id == commandId)
+                .FirstOrDefault();
         }
 
         public IEnumerable<Command> GetCommandsForPlatform(int platformId)
@@ -57,7 +56,7 @@ namespace CommandsService.Data
                 .OrderBy(c => c.Platform.Name);
         }
 
-        public bool PlaformExits(int platformId)
+        public bool PlatformExist(int platformId)
         {
             return _context.Platforms.Any(p => p.Id == platformId);
         }

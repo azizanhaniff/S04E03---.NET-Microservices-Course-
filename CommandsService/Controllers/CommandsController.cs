@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using AutoMapper;
+﻿using AutoMapper;
 using CommandsService.Data;
 using CommandsService.Dtos;
 using CommandsService.Models;
@@ -26,7 +24,7 @@ namespace CommandsService.Controllers
         {
             Console.WriteLine($"--> Hit GetCommandsForPlatform: {platformId}");
 
-            if (!_repository.PlaformExits(platformId))
+            if (_repository.PlatformExist(platformId) == false)
             {
                 return NotFound();
             }
@@ -41,14 +39,14 @@ namespace CommandsService.Controllers
         {
             Console.WriteLine($"--> Hit GetCommandForPlatform: {platformId} / {commandId}");
 
-            if (!_repository.PlaformExits(platformId))
+            if (_repository.PlatformExist(platformId) == false)
             {
                 return NotFound();
             }
 
             var command = _repository.GetCommand(platformId, commandId);
 
-            if(command == null)
+            if (command == null)
             {
                 return NotFound();
             }
@@ -59,9 +57,9 @@ namespace CommandsService.Controllers
         [HttpPost]
         public ActionResult<CommandReadDto> CreateCommandForPlatform(int platformId, CommandCreateDto commandDto)
         {
-             Console.WriteLine($"--> Hit CreateCommandForPlatform: {platformId}");
+            Console.WriteLine($"--> Hit CreateCommandForPlatform: {platformId}");
 
-            if (!_repository.PlaformExits(platformId))
+            if (_repository.PlatformExist(platformId) == false)
             {
                 return NotFound();
             }
@@ -73,9 +71,14 @@ namespace CommandsService.Controllers
 
             var commandReadDto = _mapper.Map<CommandReadDto>(command);
 
-            return CreatedAtRoute(nameof(GetCommandForPlatform),
-                new {platformId = platformId, commandId = commandReadDto.Id}, commandReadDto);
+            return CreatedAtRoute(
+                nameof(GetCommandForPlatform),
+                new
+                {
+                    platformId = platformId,
+                    commandId = commandReadDto.Id
+                },
+                commandReadDto);
         }
-
     }
 }

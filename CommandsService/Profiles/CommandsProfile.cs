@@ -1,7 +1,6 @@
-using AutoMapper;
+﻿using AutoMapper;
 using CommandsService.Dtos;
 using CommandsService.Models;
-using PlatformService;
 
 namespace CommandsService.Profiles
 {
@@ -10,7 +9,7 @@ namespace CommandsService.Profiles
         public CommandsProfile()
         {
             // Source -> Target
-            CreateMap<Platform, PlatformreadDto>();
+            CreateMap<Platform, PlatformReadDto>();
             CreateMap<CommandCreateDto, Command>();
             CreateMap<Command, CommandReadDto>();
             CreateMap<PlatformPublishedDto, Platform>()

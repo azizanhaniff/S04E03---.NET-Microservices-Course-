@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CommandsService.Models
 {
@@ -16,5 +15,5 @@ namespace CommandsService.Models
         public string Name { get; set; }
 
         public ICollection<Command> Commands { get; set; } = new List<Command>();
-     }
+    }
 }

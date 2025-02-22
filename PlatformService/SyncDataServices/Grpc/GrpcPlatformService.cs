@@ -1,5 +1,4 @@
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Grpc.Core;
 using PlatformService.Data;
 
@@ -21,7 +20,7 @@ namespace PlatformService.SyncDataServices.Grpc
             var response = new PlatformResponse();
             var platforms = _repository.GetAllPlatforms();
 
-            foreach(var plat in platforms)
+            foreach (var plat in platforms)
             {
                 response.Platform.Add(_mapper.Map<GrpcPlatformModel>(plat));
             }

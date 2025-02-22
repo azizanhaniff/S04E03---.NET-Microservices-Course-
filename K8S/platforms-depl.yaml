@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: platformservice
-          image: binarythistle/platformservice:latest
+          image: azizanhaniff/platformservice:latest
 ---
 apiVersion: v1
 kind: Service
@@ -27,9 +27,9 @@ spec:
   ports:
   - name: platformservice
     protocol: TCP
-    port: 80
-    targetPort: 80
-  - name: plafromgrpc
+    port: 8080
+    targetPort: 8080
+  - name: platformgrpc
     protocol: TCP
     port: 666
     targetPort: 666

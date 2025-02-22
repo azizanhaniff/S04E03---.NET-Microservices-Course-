@@ -1,26 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using CommandsService.AsyncDataServices;
+using CommandsService.Data;
+using CommandsService.EventProcessing;
+using CommandsService.SyncDataServices.Grpc;
+using Microsoft.EntityFrameworkCore;
 
-namespace CommandsService
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+builder.Services.AddScoped<ICommandRepo, CommandRepo>();
+builder.Services.AddScoped<IPlatformDataClient, PlatformDataClient>();
+builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+builder.Services.AddControllers();
+builder.Services.AddHostedService<MessageBusSubscriber>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+//We're not using HTTPS for this learning. Comment out so the warning is not triggered.
+//app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+PrepDb.PrepPopulation(app);
+
+app.Run();

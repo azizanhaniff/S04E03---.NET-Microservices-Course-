@@ -1,4 +1,4 @@
-namespace CommandsService.Dtos
+﻿namespace CommandsService.Dtos
 {
     public class PlatformPublishedDto
     {

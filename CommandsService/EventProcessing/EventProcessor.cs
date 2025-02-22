@@ -1,10 +1,8 @@
-using System;
-using System.Text.Json;
-using AutoMapper;
+﻿using AutoMapper;
 using CommandsService.Data;
 using CommandsService.Dtos;
 using CommandsService.Models;
-using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 
 namespace CommandsService.EventProcessing
 {
@@ -13,7 +11,7 @@ namespace CommandsService.EventProcessing
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IMapper _mapper;
 
-        public EventProcessor(IServiceScopeFactory scopeFactory, AutoMapper.IMapper mapper)
+        public EventProcessor(IServiceScopeFactory scopeFactory, IMapper mapper)
         {
             _scopeFactory = scopeFactory;
             _mapper = mapper;
@@ -26,20 +24,20 @@ namespace CommandsService.EventProcessing
             switch (eventType)
             {
                 case EventType.PlatformPublished:
-                    addPlatform(message);
+                    AddPlatform(message);
                     break;
                 default:
                     break;
             }
         }
 
-        private EventType DetermineEvent(string notifcationMessage)
+        private EventType DetermineEvent(string notificationMessage)
         {
             Console.WriteLine("--> Determining Event");
 
-            var eventType = JsonSerializer.Deserialize<GenericEventDto>(notifcationMessage);
+            var eventType = JsonSerializer.Deserialize<GenericEventDto>(notificationMessage);
 
-            switch(eventType.Event)
+            switch (eventType.Event)
             {
                 case "Platform_Published":
                     Console.WriteLine("--> Platform Published Event Detected");
@@ -50,40 +48,39 @@ namespace CommandsService.EventProcessing
             }
         }
 
-        private void addPlatform(string platformPublishedMessage)
+        private void AddPlatform(string platformPublishedMessage)
         {
-            using (var scope = _scopeFactory.CreateScope())
+            using var scope = _scopeFactory.CreateScope();
+
+            var repo = scope.ServiceProvider.GetRequiredService<ICommandRepo>();
+
+            var platformPublishedDto = JsonSerializer.Deserialize<PlatformPublishedDto>(platformPublishedMessage);
+
+            try
             {
-                var repo = scope.ServiceProvider.GetRequiredService<ICommandRepo>();
-                
-                var platformPublishedDto = JsonSerializer.Deserialize<PlatformPublishedDto>(platformPublishedMessage);
+                var plat = _mapper.Map<Platform>(platformPublishedDto);
 
-                try
+                if (repo.ExternalPlatformExists(plat.ExternalID) == false)
                 {
-                    var plat = _mapper.Map<Platform>(platformPublishedDto);
-                    if(!repo.ExternalPlatformExists(plat.ExternalID))
-                    {
-                        repo.CreatePlatform(plat);
-                        repo.SaveChanges();
-                        Console.WriteLine("--> Platform added!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("--> Platform already exisits...");
-                    }
-
+                    repo.CreatePlatform(plat);
+                    repo.SaveChanges();
+                    Console.WriteLine("--> Platform added!");
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine($"--> Could not add Platform to DB {ex.Message}");
+                    Console.WriteLine("--> Platform already exists...");
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"--> Could not add Platform to DB: {ex.Message}");
+            }
         }
-    }
 
-    enum EventType
-    {
-        PlatformPublished,
-        Undetermined
+        enum EventType
+        {
+            PlatformPublished,
+            Undetermined
+        }
     }
 }
